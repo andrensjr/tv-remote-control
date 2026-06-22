@@ -6,8 +6,9 @@ const { Server } = require("socket.io");
 // 1. Cria um servidor HTTP
 const httpServer = http.createServer((req, res) => {
   // Define o caminho do arquivo solicitado, tratando a raiz como 'index.html'
-  let filePath = path.join(__dirname, 'public', req.url === '/' ? 'index.html' : req.url);
-
+  // let filePath = path.join(__dirname, 'public', req.url === '/' ? 'index.html' : req.url);
+  let filePath = path.join(__dirname, '../client', req.url === '/' ? 'tv.html' : req.url);
+  console.log(filePath)
   // Obtém a extensão do arquivo para definir o Content-Type correto
   const extname = String(path.extname(filePath)).toLowerCase();
   const mimeTypes = {
