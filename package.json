@@ -1,4 +1,16 @@
 {
   "name": "tvs-remote-control",
-  "packageManager": "yarn@4.12.0"
+  "packageManager": "yarn@4.12.0",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "eiows": "^9.2.0",
+    "socket.io": "^4.8.3",
+    "ws": "^8.21.0"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.1.0",
+    "utf-8-validate": "^6.0.6"
+  }
 }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <title>TVs Remote Control Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="chat.css" type="text/css" media="screen" charset="utf-8">
+</head>
+
+<body>
+  <h1 id="title">TVs Remote Control</h1>
+  <p id="subtitle">Open the browser's developer console to see connection messages.</p>
+
+  <header>
+      <span>💬 TVs Remote Control Chat</span>
+      <span id="status">conectando...</span>
+  </header>
+  <div id="grid">
+    <div id="chat-wrapper">
+      <main id="messages-container">
+          <div id="messages"></div>
+      </main>
+
+
+      <form id="chatForm">
+        <input
+        id="chatInput"
+        type="text"
+        placeholder="Digite um comando e pressione Enter..."
+        autocomplete="off"
+        />
+        <button id="btnPing" type="submit">Enviar comando</button>
+      </form>
+    </div>
+
+    <!-- elemento para comandos -->
+    <div id="commandBox" tabindex="0" style="border:1px solid #333; padding:10px; margin:10px; width:200px;">
+        <strong>Comandos:</strong>
+        <p>Clique aqui para habilitar o uso das teclas</p>
+    </div>
+  </div>
+
+
+  <!-- A biblioteca cliente do Socket.IO é servida automaticamente pelo servidor -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+  <script src="key-listener.js"></script>
+</body>
+</html>
