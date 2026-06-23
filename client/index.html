@@ -6,7 +6,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
-        const socket = io('http://localhost:3000');
+        const socket = io('http://localhost:3001');
 
         // MUITO CUIDADO: Usar eval pode ser perigoso! Só use se confiar no servidor.
         socket.on('server:send:command', (data) => {

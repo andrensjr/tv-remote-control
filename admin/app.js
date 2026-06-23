@@ -1,4 +1,3 @@
-const socket = io();
 const statusEl = document.getElementById('status');
 const messagesEl = document.getElementById('messages');
 const chatInput = document.getElementById('chatInput');
@@ -6,6 +5,7 @@ const chatForm = document.getElementById('chatForm');
 const btnPing = document.getElementById('btnPing');
 const chatWrapper = document.getElementById('chat-wrapper');
 
+const socket = io('http://localhost:3001');
 
 const messageColors = {
   'log': '#81F7CA',

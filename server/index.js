@@ -5,27 +5,27 @@ const { Server } = require("socket.io");
 
 // 1. Cria um servidor HTTP
 const httpServer = http.createServer((req, res) => {
-  // Define o caminho do arquivo solicitado, tratando a raiz como 'index.html'
-  // let filePath = path.join(__dirname, 'public', req.url === '/' ? 'index.html' : req.url);
-  let filePath = path.join(__dirname, '../client', req.url === '/' ? 'tv.html' : req.url);
-  console.log(filePath)
-  // Obtém a extensão do arquivo para definir o Content-Type correto
-  const extname = String(path.extname(filePath)).toLowerCase();
-  const mimeTypes = {
-    '.html': 'text/html',
-    '.js': 'text/javascript',
-    '.css': 'text/css',
-  };
-  const contentType = mimeTypes[extname] || 'application/octet-stream';
+  // // Define o caminho do arquivo solicitado, tratando a raiz como 'index.html'
+  // // let filePath = path.join(__dirname, 'public', req.url === '/' ? 'index.html' : req.url);
+  // let filePath = path.join(__dirname, '../client', req.url === '/' ? 'tv.html' : req.url);
+  // console.log(filePath)
+  // // Obtém a extensão do arquivo para definir o Content-Type correto
+  // const extname = String(path.extname(filePath)).toLowerCase();
+  // const mimeTypes = {
+  //   '.html': 'text/html',
+  //   '.js': 'text/javascript',
+  //   '.css': 'text/css',
+  // };
+  // const contentType = mimeTypes[extname] || 'application/octet-stream';
 
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404);
-      return res.end(`File not found: ${req.url}`);
-    }
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(data);
-  })
+  // fs.readFile(filePath, (err, data) => {
+  //   if (err) {
+  //     res.writeHead(404);
+  //     return res.end(`File not found: ${req.url}`);
+  //   }
+  //   res.writeHead(200, { 'Content-Type': contentType });
+  //   res.end(data);
+  // })
 });
 
 const io = new Server(httpServer, {
@@ -54,6 +54,6 @@ io.on('connection', (socket) => {
   })
 });
 
-httpServer.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+httpServer.listen(3001, () => {
+  console.log('Server is running on http://localhost:3001');
 });
