@@ -3,83 +3,12 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" type="text/css" href="css/main.css">
+
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script>
-        const socket = io('http://localhost:3001');
 
-        // MUITO CUIDADO: Usar eval pode ser perigoso! Só use se confiar no servidor.
-        socket.on('server:send:command', (data) => {
-        eval(data.comando);
-        });
-
-        // Salva referências para os métodos originais do console
-        const _privateLog = console.log;
-        const _privateError = console.error;
-        const _privateWarn = console.warn;
-
-        // Sobrescreve o console.log
-        console.log = function(...args) {
-            if (socket?.connected) {
-                args.splice(1,1)
-                socket.emit('client:stdout', { type: 'log', data: JSON.stringify(args.join(' '))});
-            }
-            _privateLog.apply(console, arguments);
-        };
-
-        // Sobrescreve o console.error
-        console.error = function(...args) {
-            if (socket?.connected) {
-                args.splice(1,1)
-                socket.emit('client:stdout', { type: 'error', data: JSON.stringify(args.join(' '))});
-            }
-            _privateError.apply(console, arguments);
-        };
-
-        // Sobrescreve o console.warn
-        console.warn = function(...args) {
-            if (socket?.connected) {
-                args.splice(1,1)
-                socket.emit('client:stdout', { type: 'warn', data: JSON.stringify(args.join(' '))});
-            }
-            _privateWarn.apply(console, arguments);
-        };
-
-        // Captura erros globais de JS
-        // window.onerror = function(message, source, lineno, colno, error) {
-        //     debugger
-        //     if (socket?.connected) {
-        //         socket.emit('client:stdout', {
-        //             type: 'window.onerror',
-        //             data: JSON.stringify({
-        //                 message,
-        //                 source,
-        //                 lineno,
-        //                 colno,
-        //                 stack: error && error.stack ? error.stack : null,
-        //                 userAgent: navigator.userAgent,
-        //                 timestamp: new Date().toISOString()
-        //             })
-        //         });
-        //     }
-        //     return false;
-        // };
-
-        // // Captura erros não tratados em Promises
-        // window.addEventListener('unhandledrejection', function(event) {
-        //     debugger
-        //     if (socket?.connected) {
-        //         socket.emit('client:stdout', {
-        //             type: 'window.unhandledrejection',
-        //             data: JSON.stringify({
-        //                 reason: event.reason,
-        //                 userAgent: navigator.userAgent,
-        //                 timestamp: new Date().toISOString()
-        //             })
-        //         });
-        //     }
-        // });
-    </script>
+    <script src="/websocket-listener.js"></script>
+    <script src="/overrides/console.js"></script>
+    <script src="/overrides/log.js"></script>
 
     <title>Globoplay</title>
 

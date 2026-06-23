@@ -12,6 +12,10 @@ app.get('/', (req, res) => {
 
 // Define o diretório 'admin' como um local para servir arquivos estáticos.
 // Isso permitirá que arquivos como app.css sejam acessados via /admin/app.css.
+app.use('/', express.static(path.join(__dirname, 'client')));
+
+// Define o diretório 'admin' como um local para servir arquivos estáticos.
+// Isso permitirá que arquivos como app.css sejam acessados via /admin/app.css.
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 
 // Rota para /admin, que serve o arquivo principal da aplicação.
