@@ -3,17 +3,438 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width">
-
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
     <script src="/websocket-listener.js"></script>
     <script src="/overrides/console.js"></script>
     <script src="/overrides/log.js"></script>
-
     <title>Globoplay</title>
+    <style>
+        body {
+            margin: 0;
+            background: #111;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            background: #222;
+            width: 60px;
+            transition: width 0.3s;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+        }
+        .sidebar.expanded {
+            width: 200px;
+        }
+        .sidebar .menu-item {
+            margin: 20px 0;
+            white-space: nowrap;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 3px solid transparent;
+            transition: border 0.2s, background 0.2s;
+            cursor: pointer;
+            min-width: 40px;
+            text-align: left;
+        }
+        .sidebar .menu-item.focused {
+            border: 3px solid #fff;
+        }
+        .sidebar .menu-item.selected {
+            background: #2196f3;
+        }
+        .main-content {
+            flex: 1;
+            padding: 40px 0 0 40px;
+            overflow-y: auto;
+            height: 100vh;
+        }
 
+        /* Carrossel Maior */
+        .big-carousel-wrapper {
+            width: 100%;
+            height: 500px;
+            overflow: hidden;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .big-carousel {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            transition: transform 0.4s cubic-bezier(.77,0,.18,1);
+        }
+        .big-carousel-item {
+            flex: 0 0 80%;
+            height: 90%;
+            margin-right: -10%;
+            background: #444;
+            border-radius: 24px;
+            margin-left: 5%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5em;
+            border: 5px solid transparent;
+            box-sizing: border-box;
+            color: #fff;
+            transition: border 0.2s, background 0.2s;
+            position: relative;
+            z-index: 2;
+        }
+        .big-carousel-item.focused {
+            border: 5px solid #fff;
+            z-index: 3;
+        }
+        .big-carousel-item.selected {
+            background: #2196f3;
+        }
+
+        /* Carrosseis Menores */
+        .carousel-wrapper {
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        .carousel {
+            display: flex;
+            align-items: center;
+            transition: transform 0.4s cubic-bezier(.77,0,.18,1);
+            will-change: transform;
+        }
+        .carousel-item {
+            width: 120px;
+            height: 120px;
+            background: #333;
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            border-radius: 12px;
+            border: 3px solid transparent;
+            transition: border 0.2s, background 0.2s;
+            box-sizing: border-box;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .carousel-item.focused {
+            border: 3px solid #fff;
+        }
+        .carousel-item.selected {
+            background: #2196f3;
+        }
+    </style>
 </head>
-<body id="player-wrapper">
+<body id="tv-app">
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="menu-item" data-menu="0">☰</div>
+            <div class="menu-item" data-menu="1">Início</div>
+            <div class="menu-item" data-menu="2">Filmes</div>
+            <div class="menu-item" data-menu="3">Séries</div>
+            <div class="menu-item" data-menu="4">Infantil</div>
+        </div>
+        <div class="main-content" id="main-content">
+            <!-- Big Carousel -->
+            <div class="big-carousel-wrapper">
+                <div class="big-carousel" id="big-carousel">
+                    <!-- Itens do big carousel -->
+                </div>
+            </div>
+            <!-- Carrosseis menores -->
+            <div id="carousels">
+                <!-- Carrosseis menores serão inseridos aqui -->
+            </div>
+        </div>
+    </div>
+    <script>
+        // --- Configuração dos carrosseis ---
+        const NUM_SMALL_CAROUSELS = 12;
+        const ITEMS_PER_CAROUSEL = 10;
 
+        // Big Carousel
+        function createBigCarouselItems() {
+            const bigCarousel = document.getElementById('big-carousel');
+            for (let i = 0; i < 10; i++) {
+                const item = document.createElement('div');
+                item.className = 'big-carousel-item';
+                item.tabIndex = -1;
+                item.textContent = `Big ${i+1}`;
+                item.dataset.carousel = 'big';
+                item.dataset.index = i;
+                bigCarousel.appendChild(item);
+            }
+        }
+        createBigCarouselItems();
+
+        // Small Carousels
+        function createSmallCarousels() {
+            const carouselsDiv = document.getElementById('carousels');
+            for (let c = 0; c < NUM_SMALL_CAROUSELS; c++) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'carousel-wrapper';
+                const carousel = document.createElement('div');
+                carousel.className = 'carousel';
+                carousel.id = `carousel-${c+1}`;
+                for (let i = 0; i < ITEMS_PER_CAROUSEL; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'carousel-item';
+                    item.tabIndex = -1;
+                    item.textContent = `${c+1}.${i+1}`;
+                    item.dataset.carousel = c+1;
+                    item.dataset.index = i;
+                    carousel.appendChild(item);
+                }
+                wrapper.appendChild(carousel);
+                carouselsDiv.appendChild(wrapper);
+            }
+        }
+        createSmallCarousels();
+
+        // --- Estado de navegação ---
+        // focusMode: 'carousel', 'menu', 'big'
+        let focusMode = 'big'; // começa no big carousel
+        let focus = { carousel: 0, index: 0 }; // carousel: 0 = big, 1...N = smalls
+        let selected = Array(NUM_SMALL_CAROUSELS + 1).fill(null); // [big, c1, c2, ...]
+        let menuFocus = 1; // começa no primeiro item de menu (não o ícone)
+        let menuSelected = null;
+        let lastCarouselFocus = { carousel: 0, index: 0 };
+        let sidebarWasExpanded = false;
+
+        // Para cada carrossel menor, manter o offset de scroll (primeiro item visível)
+        let smallCarouselOffsets = Array(NUM_SMALL_CAROUSELS + 1).fill(0);
+
+        // Para cada carrossel menor, manter o índice de foco
+        let smallCarouselFocusIndices = Array(NUM_SMALL_CAROUSELS + 1).fill(0);
+
+        // Para o big carousel, manter o índice de foco
+        let bigCarouselFocusIndex = 0;
+
+        // --- Funções de atualização visual ---
+        function updateFocus() {
+            // Remove todos os focos
+            document.querySelectorAll('.big-carousel-item').forEach(el => el.classList.remove('focused'));
+            document.querySelectorAll('.carousel-item').forEach(el => el.classList.remove('focused'));
+            document.querySelectorAll('.sidebar .menu-item').forEach(el => el.classList.remove('focused'));
+            const sidebar = document.getElementById('sidebar');
+            if (focusMode === 'big') {
+                if (!sidebarWasExpanded) sidebar.classList.remove('expanded');
+                const items = document.querySelectorAll('.big-carousel-item');
+            if (items[focus.index]) {
+                items[focus.index].classList.add('focused');
+                    // Scroll big carousel
+                    const bigCarousel = document.getElementById('big-carousel');
+                    bigCarousel.style.transform = `translateX(-${focus.index * 80}%)`;
+                    // Scroll para o topo para garantir visibilidade
+                    const bigWrapper = document.querySelector('.big-carousel-wrapper');
+                    if (bigWrapper) {
+                        bigWrapper.scrollIntoView({behavior: "smooth", block: "start"});
+            }
+                }
+            } else if (focusMode === 'carousel') {
+                if (!sidebarWasExpanded) sidebar.classList.remove('expanded');
+                const carouselId = `carousel-${focus.carousel}`;
+                const items = document.querySelectorAll(`#${carouselId} .carousel-item`);
+                // Atualiza offset para manter o foco sempre no início
+                let offset = smallCarouselOffsets[focus.carousel] || 0;
+                // Se o foco está nos últimos itens, não rolar além do fim
+                    if (focus.index < ITEMS_PER_CAROUSEL - 1) {
+                    offset = focus.index;
+                } else {
+                    offset = ITEMS_PER_CAROUSEL - 1;
+                }
+                smallCarouselOffsets[focus.carousel] = offset;
+                // Aplica o transform ao carrossel
+                const carousel = document.getElementById(carouselId);
+                if (carousel) {
+                    // Cada item tem 120px + 20px margin-right = 140px
+                    let maxOffset = ITEMS_PER_CAROUSEL - 1;
+                    let translate = -Math.min(offset, maxOffset - 1) * 140;
+                    // Se estiver no último item, alinhar à direita
+                    if (focus.index === ITEMS_PER_CAROUSEL - 1) {
+                        translate = -(ITEMS_PER_CAROUSEL - 2) * 140;
+                    }
+                    carousel.style.transform = `translateX(${translate}px)`;
+                }
+                // Marca o item focado
+                if (items[focus.index]) {
+                    items[focus.index].classList.add('focused');
+        }
+                // Scroll vertical para manter o carrossel visível
+                const wrapper = document.getElementById(carouselId)?.parentElement;
+                if (wrapper) {
+                    wrapper.scrollIntoView({behavior: "smooth", block: "nearest"});
+            }
+            } else if (focusMode === 'menu') {
+                        sidebarWasExpanded = sidebar.classList.contains('expanded');
+                sidebar.classList.add('expanded');
+                const menuItems = document.querySelectorAll('.sidebar .menu-item');
+                if (menuItems[menuFocus]) {
+                    menuItems[menuFocus].classList.add('focused');
+                    menuItems[menuFocus].scrollIntoView({behavior: "smooth", block: "nearest"});
+                    }
+                }
+            }
+
+        function updateSelection() {
+            document.querySelectorAll('.big-carousel-item').forEach(el => el.classList.remove('selected'));
+            if (selected[0] !== null) {
+                const items = document.querySelectorAll('.big-carousel-item');
+                if (items[selected[0]]) items[selected[0]].classList.add('selected');
+            }
+            document.querySelectorAll('.carousel-item').forEach(el => el.classList.remove('selected'));
+            for (let c = 1; c <= NUM_SMALL_CAROUSELS; c++) {
+                if (selected[c] !== null) {
+                    const items = document.querySelectorAll(`#carousel-${c} .carousel-item`);
+                    if (items[selected[c]]) items[selected[c]].classList.add('selected');
+                }
+            }
+            document.querySelectorAll('.sidebar .menu-item').forEach(el => el.classList.remove('selected'));
+            if (menuSelected !== null) {
+                const menuItems = document.querySelectorAll('.sidebar .menu-item');
+                if (menuItems[menuSelected]) menuItems[menuSelected].classList.add('selected');
+            }
+        }
+
+        // --- Navegação por teclado ---
+        document.addEventListener('keydown', function(e) {
+            if (focusMode === 'big') {
+                if (e.key === 'ArrowRight') {
+                    if (focus.index < 9) {
+                        focus.index++;
+                        bigCarouselFocusIndex = focus.index;
+        updateFocus();
+                    }
+                } else if (e.key === 'ArrowLeft') {
+                    if (focus.index > 0) {
+                        focus.index--;
+                        bigCarouselFocusIndex = focus.index;
+                        updateFocus();
+                    } else {
+                        // Vai para o menu lateral
+                        lastCarouselFocus = { ...focus, carousel: 0 };
+                        focusMode = 'menu';
+                        updateFocus();
+                    }
+                } else if (e.key === 'ArrowDown') {
+                        focusMode = 'carousel';
+                    // Ao descer para o primeiro carrossel menor, usar o índice salvo dele
+                    focus = { carousel: 1, index: smallCarouselFocusIndices[1] || 0 };
+                    updateFocus();
+                } else if (e.key === 'Enter') {
+                    selected[0] = focus.index;
+                    updateSelection();
+                } else if (e.key === 'm' || e.key === 'M') {
+                        const sidebar = document.getElementById('sidebar');
+                        sidebar.classList.toggle('expanded');
+                        sidebarWasExpanded = sidebar.classList.contains('expanded');
+                    }
+                bigCarouselFocusIndex = focus.index;
+            } else if (focusMode === 'carousel') {
+                if (e.key === 'ArrowRight') {
+                    if (focus.index < ITEMS_PER_CAROUSEL - 1) {
+                        focus.index++;
+                        smallCarouselFocusIndices[focus.carousel] = focus.index;
+        updateFocus();
+                    }
+                } else if (e.key === 'ArrowLeft') {
+                    if (focus.index > 0) {
+                        focus.index--;
+                        smallCarouselFocusIndices[focus.carousel] = focus.index;
+                        updateFocus();
+                    } else {
+                        // Vai para o menu lateral
+                        lastCarouselFocus = { ...focus };
+                        focusMode = 'menu';
+                        updateFocus();
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    if (focus.carousel < NUM_SMALL_CAROUSELS) {
+                        // Salva o índice atual do carrossel de origem
+                        smallCarouselFocusIndices[focus.carousel] = focus.index;
+                        // Recupera o índice do carrossel de destino
+                        let nextIndex = smallCarouselFocusIndices[focus.carousel + 1] || 0;
+                        focus.carousel++;
+                        focus.index = nextIndex;
+                        updateFocus();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    if (focus.carousel > 1) {
+                        // Salva o índice atual do carrossel de origem
+                        smallCarouselFocusIndices[focus.carousel] = focus.index;
+                        // Recupera o índice do carrossel de destino
+                        let prevIndex = smallCarouselFocusIndices[focus.carousel - 1] || 0;
+                        focus.carousel--;
+                        focus.index = prevIndex;
+                        updateFocus();
+                    } else if (focus.carousel === 1) {
+                        // Sobe para o big carousel
+                        smallCarouselFocusIndices[focus.carousel] = focus.index;
+                        focusMode = 'big';
+                        focus = { carousel: 0, index: bigCarouselFocusIndex || 0 };
+                        updateFocus();
+                    }
+                } else if (e.key === 'Enter') {
+                    selected[focus.carousel] = focus.index;
+                    updateSelection();
+                } else if (e.key === 'm' || e.key === 'M') {
+                    const sidebar = document.getElementById('sidebar');
+                    sidebar.classList.toggle('expanded');
+                    sidebarWasExpanded = sidebar.classList.contains('expanded');
+                }
+            } else if (focusMode === 'menu') {
+                const menuItems = document.querySelectorAll('.sidebar .menu-item');
+                if (e.key === 'ArrowDown') {
+                    if (menuFocus < menuItems.length - 1) {
+                        menuFocus++;
+                        updateFocus();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    if (menuFocus > 0) {
+                        menuFocus--;
+                        updateFocus();
+                    }
+                } else if (e.key === 'ArrowRight') {
+                    // Volta para o carrossel na última posição
+                    if (lastCarouselFocus.carousel === 0) {
+                        focusMode = 'big';
+                        focus = { carousel: 0, index: lastCarouselFocus.index };
+                    } else {
+                        focusMode = 'carousel';
+                        focus = { ...lastCarouselFocus };
+                    }
+                    updateFocus();
+                } else if (e.key === 'Enter') {
+                    menuSelected = menuFocus;
+                    updateSelection();
+                    // Se clicar no ícone ☰, expande/esconde menu
+                    if (menuFocus === 0) {
+                        const sidebar = document.getElementById('sidebar');
+                        sidebar.classList.toggle('expanded');
+                        sidebarWasExpanded = sidebar.classList.contains('expanded');
+                    }
+                }
+            }
+        });
+
+        // Expande/esconde menu com clique no ícone ☰
+        document.querySelector('.sidebar .menu-item').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('expanded');
+            sidebarWasExpanded = sidebar.classList.contains('expanded');
+        });
+
+        // Inicializa seleção e foco
+        updateSelection();
+        updateFocus();
+    </script>
 </body>
 </html>

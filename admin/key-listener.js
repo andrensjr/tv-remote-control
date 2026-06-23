@@ -25,17 +25,9 @@ const handleCommandKey = (event) => {
     ];
 
     const keyDownMessage = `
-        player.core._mediaControl.show();
-        const playerElement = document.querySelectorAll('#wp3-player-1')[0];
+        const app = document.getElementById('tv-app');
         const evento = new KeyboardEvent('keydown', ${JSON.stringify(eventProperties)});
-
-        Object.defineProperty(evento, 'keyCode', {
-            value: ${event.keyCode},
-            writable: false,
-            configurable: true
-        });
-
-        playerElement.dispatchEvent(evento);
+        app.dispatchEvent(evento);
     `
     // 3. Dispare o evento no documento
     // document.dispatchEvent(evento);
